@@ -4,6 +4,7 @@ var mongoose= require('mongoose');
 const UserModel = require('../models/Usermodel');
 const ItemModel = require('../models/Itemmodel');
 const CartModel = require('../models/Cartmodel');
+const fileManager = require('../config/fileManager');
 
 const connect = mongoose.connect("mongodb://localhost:27017/anskushapp",{ useNewUrlParser: true }, {autoIndex: false});
 // connecting to the database
@@ -60,10 +61,10 @@ router.get('/item/get', function(req, res, next) {
 });
 
 //post endpoint
-router.post('/item/post', async function(req, res, next) {
+router.post('/item/post',fileManager.ItemImage.single('Image'), async function(req, res, next) {
   
   var item = {
-    //Image: req.body.Image,
+    Image: req.file.path,
     Title: req.body.Title,
     Specifications: req.body.Specifications,
     Description: req.body.Description,
@@ -75,11 +76,12 @@ router.post('/item/post', async function(req, res, next) {
 });
 
 //update endpoint
-router.put('/item/update',async function(req, res, next) {
+router.put('/item/update',fileManager.ItemImage.single('Image'),async function(req, res, next) {
   var id = req.body.id;
 
   var result = await ItemModel.findById(id);
-   //result.Image=req.body.Image;
+  await fileManager.DeleteFile( result.Image );
+   result.Image=req.file.path;
    result.Title=req.body.Title;
    result.Specifications=req.body.Specifications;
    result.Description=req.body.Description;
@@ -91,6 +93,8 @@ router.put('/item/update',async function(req, res, next) {
 //delete endpoint
 router.delete('/item/delete', async function(req, res, next) {
   var id = req.body.id;
+  var result = await ItemModel.findById(id);
+  await fileManager.DeleteFile( result.Image );
   var result = await ItemModel.findByIdAndDelete(id);
   res.status(200).json({success: true, message :result });
 });
@@ -106,10 +110,10 @@ router.post('/cart/get', function(req, res, next) {
 });
 
 //post endpoint
-router.post('/cart/post', async function(req, res, next) {
+router.post('/cart/post', fileManager.CartImage.single('Image'),async function(req, res, next) {
   
   var item = {
-    //Image: req.body.Image,
+    Image: req.file.path,
     Title: req.body.Title,
     Price: req.body.Price,
     EmailAddress: req.body.EmailAddress
@@ -122,6 +126,8 @@ router.post('/cart/post', async function(req, res, next) {
 //delete endpoint
 router.delete('/cart/delete', async function(req, res, next) {
   var id = req.body.id;
+  var result = await CartModel.findById(id);
+  await fileManager.DeleteFile( result.Image );
   var result = await CartModel.findByIdAndDelete(id);
   res.status(200).json({success: true, message :result });
 });
