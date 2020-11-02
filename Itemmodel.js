@@ -3,7 +3,7 @@ var Schema=mongoose.Schema;
 
 //Schema (table structue)
 var itemSchema= new Schema({
-    //Image: { type: String},
+    Image: { type: String},
     Title: { type: String, required: true},
     Specifications: { type: String},
     Description: { type: String},
