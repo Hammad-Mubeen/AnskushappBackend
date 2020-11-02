@@ -1,10 +1,12 @@
 var express = require('express');
 var router = express.Router();
+var JWT= require('jsonwebtoken');
 var mongoose= require('mongoose');
 const UserModel = require('../models/Usermodel');
 const ItemModel = require('../models/Itemmodel');
 const CartModel = require('../models/Cartmodel');
 const fileManager = require('../config/fileManager');
+const authentication= require('../config/authentication');
 
 const connect = mongoose.connect("mongodb://localhost:27017/anskushapp",{ useNewUrlParser: true }, {autoIndex: false});
 // connecting to the database
@@ -46,13 +48,14 @@ router.post('/user/login', async function(req, res, next) {
     return res.status(409).json({success: false,message:"Invalid username or password"});
   }
   console.log(result);
-  res.status(200).json({success: true, message:'Successfully Login !' });
+  const token=JWT.sign(req.body.EmailAddress,'my_secret_key');
+  res.status(200).json({success: true, message:'Successfully Login !',token:token });
 });
 //Logout
 
 //ItemModel Endpoints
 //Get All items
-router.get('/item/get', function(req, res, next) {
+router.get('/item/get', authentication.ensuretoken, function(req, res, next) {
   ItemModel.find()
   .then(function(doc){
     res.status(200).json({success: true, data:doc });
@@ -61,7 +64,7 @@ router.get('/item/get', function(req, res, next) {
 });
 
 //post endpoint
-router.post('/item/post',fileManager.ItemImage.single('Image'), async function(req, res, next) {
+router.post('/item/post',authentication.ensuretoken,fileManager.ItemImage.single('Image'), async function(req, res, next) {
   
   var item = {
     Image: req.file.path,
@@ -76,7 +79,7 @@ router.post('/item/post',fileManager.ItemImage.single('Image'), async function(r
 });
 
 //update endpoint
-router.put('/item/update',fileManager.ItemImage.single('Image'),async function(req, res, next) {
+router.put('/item/update',authentication.ensuretoken,fileManager.ItemImage.single('Image'),async function(req, res, next) {
   var id = req.body.id;
 
   var result = await ItemModel.findById(id);
@@ -91,7 +94,7 @@ router.put('/item/update',fileManager.ItemImage.single('Image'),async function(r
 });
 
 //delete endpoint
-router.delete('/item/delete', async function(req, res, next) {
+router.delete('/item/delete', authentication.ensuretoken,async function(req, res, next) {
   var id = req.body.id;
   var result = await ItemModel.findById(id);
   await fileManager.DeleteFile( result.Image );
@@ -101,7 +104,7 @@ router.delete('/item/delete', async function(req, res, next) {
 
 //ItemModel Endpoints
 //Get All Carts of specific customer
-router.post('/cart/get', function(req, res, next) {
+router.post('/cart/get', authentication.ensuretoken,function(req, res, next) {
   CartModel.find({EmailAddress : req.body.EmailAddress})
   .then(function(doc){
     res.status(200).json({success: true, data:doc });
@@ -110,7 +113,7 @@ router.post('/cart/get', function(req, res, next) {
 });
 
 //post endpoint
-router.post('/cart/post', fileManager.CartImage.single('Image'),async function(req, res, next) {
+router.post('/cart/post',authentication.ensuretoken, fileManager.CartImage.single('Image'),async function(req, res, next) {
   
   var item = {
     Image: req.file.path,
@@ -124,7 +127,7 @@ router.post('/cart/post', fileManager.CartImage.single('Image'),async function(r
 });
 
 //delete endpoint
-router.delete('/cart/delete', async function(req, res, next) {
+router.delete('/cart/delete',authentication.ensuretoken, async function(req, res, next) {
   var id = req.body.id;
   var result = await CartModel.findById(id);
   await fileManager.DeleteFile( result.Image );
