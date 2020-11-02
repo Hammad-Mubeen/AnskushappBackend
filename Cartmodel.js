@@ -3,7 +3,7 @@ var Schema=mongoose.Schema;
 
 //Schema (table structue)
 var cartSchema= new Schema({
-    //Image: { type: String},
+    Image: { type: String},
     Title: { type: String, required: true},
     Price: { type: String},
     EmailAddress: { type: String,required: true}
